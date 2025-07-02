@@ -12,7 +12,7 @@ import MultiRoutineManager from '@/components/MultiRoutineManager';
 const Index = () => {
   const [hasApiKey, setHasApiKey] = useState(false);
   const [routines, setRoutines] = useState([]);
-  const [activeTab, setActiveTab] = useState('routines');
+  const [activeTab, setActiveTab] = useState('calendar'); // 초기 탭을 달력으로 변경
 
   useEffect(() => {
     // API 키 확인
@@ -54,6 +54,10 @@ const Index = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              달력
+            </TabsTrigger>
             <TabsTrigger value="routines" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               루틴들
@@ -66,14 +70,14 @@ const Index = () => {
               <BarChart3 className="w-4 h-4" />
               현황
             </TabsTrigger>
-            <TabsTrigger value="reflection" className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              회고
-            </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="calendar">
+            <MultiRoutineManager initialView="calendar" />
+          </TabsContent>
+
           <TabsContent value="routines">
-            <MultiRoutineManager />
+            <MultiRoutineManager initialView="routines" />
           </TabsContent>
 
           <TabsContent value="chat">
@@ -82,10 +86,6 @@ const Index = () => {
 
           <TabsContent value="dashboard">
             <Dashboard goal={routines[0]} />
-          </TabsContent>
-
-          <TabsContent value="reflection">
-            <WeeklyReflection goal={routines[0]} />
           </TabsContent>
         </Tabs>
       </div>

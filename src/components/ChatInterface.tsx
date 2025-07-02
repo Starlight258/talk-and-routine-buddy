@@ -3,12 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Send, Bot, User, Heart, Lightbulb, MessageCircle } from 'lucide-react';
+import { Send, Bot, User, Heart, Lightbulb, MessageCircle, AlertTriangle } from 'lucide-react';
 
 const ChatInterface = ({ goal }) => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [apiKeyValid, setApiKeyValid] = useState(true);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -32,6 +33,10 @@ const ChatInterface = ({ goal }) => {
 
   const getGeminiResponse = async (userMessage) => {
     const apiKey = localStorage.getItem('gemini_api_key');
+    
+    if (!apiKey) {
+      throw new Error('API 키가 설정되지 않았습니다.');
+    }
     
     const prompt = `
 당신은 친근하고 격려적인 루틴 코치 AI입니다. 사용자의 목표는 "${goal?.title}"입니다.
@@ -72,6 +77,18 @@ const ChatInterface = ({ goal }) => {
       const data = await response.json();
       console.log('Gemini API 응답:', data);
       
+      if (!response.ok) {
+        if (data.error?.message?.includes('API key expired')) {
+          setApiKeyValid(false);
+          throw new Error('API 키가 만료되었습니다. 새로운 키를 설정해주세요.');
+        } else if (data.error?.message?.includes('API key not valid')) {
+          setApiKeyValid(false);
+          throw new Error('API 키가 유효하지 않습니다. 키를 다시 확인해주세요.');
+        } else {
+          throw new Error(`API 오류: ${data.error?.message || '알 수 없는 오류'}`);
+        }
+      }
+      
       if (data.candidates && data.candidates[0] && data.candidates[0].content) {
         return data.candidates[0].content.parts[0].text;
       } else {
@@ -79,7 +96,7 @@ const ChatInterface = ({ goal }) => {
       }
     } catch (error) {
       console.error('Gemini API 오류:', error);
-      return "죄송해요, 지금은 응답할 수 없어요. 잠시 후 다시 시도해주세요. 🙏";
+      throw error;
     }
   };
 
@@ -109,12 +126,14 @@ const ChatInterface = ({ goal }) => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      setApiKeyValid(true);
     } catch (error) {
       const errorMessage = {
         id: Date.now() + 1,
         type: 'ai',
-        content: "죄송해요, 응답하는 중에 문제가 생겼어요. 다시 시도해주세요.",
-        timestamp: new Date()
+        content: error.message.includes('API') ? error.message : "죄송해요, 응답하는 중에 문제가 생겼어요. 다시 시도해주세요.",
+        timestamp: new Date(),
+        isError: true
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -129,6 +148,11 @@ const ChatInterface = ({ goal }) => {
     }
   };
 
+  const handleApiKeyRefresh = () => {
+    localStorage.removeItem('gemini_api_key');
+    window.location.reload();
+  };
+
   const quickMessages = [
     "오늘 루틴 완료했어요!",
     "오늘은 너무 힘들어요",
@@ -138,6 +162,28 @@ const ChatInterface = ({ goal }) => {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {!apiKeyValid && (
+        <Card className="border-red-200 bg-red-50 mb-4">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-red-700">
+              <AlertTriangle className="w-5 h-5" />
+              <div className="flex-1">
+                <p className="font-medium">API 키 문제가 발생했습니다</p>
+                <p className="text-sm">새로운 API 키를 설정해주세요.</p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleApiKeyRefresh}
+                className="border-red-300 text-red-700 hover:bg-red-100"
+              >
+                키 재설정
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
       <Card className="border-0 shadow-lg h-[600px] flex flex-col">
         <CardHeader className="border-b bg-gradient-to-r from-indigo-50 to-purple-50">
           <CardTitle className="flex items-center gap-2">
@@ -169,12 +215,15 @@ const ChatInterface = ({ goal }) => {
                   className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
                     message.type === 'user'
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 text-gray-800'
+                      : message.isError 
+                        ? 'bg-red-100 text-red-800 border border-red-200'
+                        : 'bg-gray-100 text-gray-800'
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{message.content}</p>
                   <p className={`text-xs mt-1 ${
-                    message.type === 'user' ? 'text-indigo-200' : 'text-gray-500'
+                    message.type === 'user' ? 'text-indigo-200' : 
+                    message.isError ? 'text-red-600' : 'text-gray-500'
                   }`}>
                     {message.timestamp.toLocaleTimeString('ko-KR', { 
                       hour: '2-digit', 
@@ -225,6 +274,7 @@ const ChatInterface = ({ goal }) => {
                     setTimeout(() => handleSendMessage(), 100);
                   }}
                   className="text-xs"
+                  disabled={!apiKeyValid}
                 >
                   {msg}
                 </Button>
@@ -241,10 +291,11 @@ const ChatInterface = ({ goal }) => {
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 className="flex-1"
+                disabled={!apiKeyValid}
               />
               <Button 
                 onClick={handleSendMessage}
-                disabled={!inputMessage.trim() || isTyping}
+                disabled={!inputMessage.trim() || isTyping || !apiKeyValid}
                 className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
               >
                 <Send className="w-4 h-4" />

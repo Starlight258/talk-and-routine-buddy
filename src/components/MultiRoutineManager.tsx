@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,10 +6,10 @@ import RoutineCard from './RoutineCard';
 import CalendarView from './CalendarView';
 import GoalSetup from './GoalSetup';
 
-const MultiRoutineManager = () => {
+const MultiRoutineManager = ({ initialView = 'routines' }) => {
   const [routines, setRoutines] = useState([]);
   const [showAddRoutine, setShowAddRoutine] = useState(false);
-  const [activeView, setActiveView] = useState('routines');
+  const [activeView, setActiveView] = useState(initialView);
 
   useEffect(() => {
     loadRoutines();
@@ -87,7 +86,7 @@ const MultiRoutineManager = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            내 루틴들
+            {activeView === 'calendar' ? '루틴 달력' : '내 루틴들'}
           </h2>
           <p className="text-gray-600">
             {routines.length}개의 루틴이 있어요
@@ -163,7 +162,30 @@ const MultiRoutineManager = () => {
       )}
 
       {activeView === 'calendar' && (
-        <CalendarView routines={routines} />
+        <>
+          {routines.length === 0 ? (
+            <Card className="border-0 shadow-lg bg-gradient-to-r from-indigo-50 to-purple-50">
+              <CardContent className="p-8 text-center">
+                <Calendar className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                  루틴을 먼저 만들어주세요!
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  달력에서 루틴 진행상황을 확인하려면 먼저 루틴을 추가해야 해요
+                </p>
+                <Button 
+                  onClick={() => setShowAddRoutine(true)}
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  첫 번째 루틴 만들기
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <CalendarView routines={routines} />
+          )}
+        </>
       )}
     </div>
   );
