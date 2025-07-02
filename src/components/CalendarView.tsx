@@ -5,16 +5,34 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
-const CalendarView = ({ routines }) => {
+interface RoutineData {
+  status: string;
+  routine: {
+    id: number;
+    title: string;
+    color: string;
+  };
+  color: string;
+}
+
+interface DayData {
+  [routineId: string]: RoutineData;
+}
+
+interface CalendarData {
+  [dateStr: string]: DayData;
+}
+
+const CalendarView = ({ routines }: { routines: any[] }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [calendarData, setCalendarData] = useState({});
+  const [calendarData, setCalendarData] = useState<CalendarData>({});
 
   useEffect(() => {
     loadCalendarData();
   }, [routines, currentDate]);
 
   const loadCalendarData = () => {
-    const data = {};
+    const data: CalendarData = {};
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     
@@ -41,7 +59,7 @@ const CalendarView = ({ routines }) => {
     setCalendarData(data);
   };
 
-  const navigateMonth = (direction) => {
+  const navigateMonth = (direction: number) => {
     const newDate = new Date(currentDate);
     newDate.setMonth(currentDate.getMonth() + direction);
     setCurrentDate(newDate);
@@ -55,7 +73,7 @@ const CalendarView = ({ routines }) => {
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
 
-    const days = [];
+    const days: (Date | null)[] = [];
     
     // 이전 달의 빈 칸들
     for (let i = 0; i < startingDayOfWeek; i++) {
@@ -71,8 +89,8 @@ const CalendarView = ({ routines }) => {
     return days;
   };
 
-  const getColorClass = (color) => {
-    const colorMap = {
+  const getColorClass = (color: string) => {
+    const colorMap: { [key: string]: string } = {
       'bg-blue-500': 'bg-blue-400',
       'bg-green-500': 'bg-green-400',
       'bg-purple-500': 'bg-purple-400',
@@ -171,7 +189,7 @@ const CalendarView = ({ routines }) => {
                     {date.getDate()}
                   </div>
                   <div className="space-y-1">
-                    {Object.values(dayData).map((item, idx) => (
+                    {Object.values(dayData).map((item: RoutineData, idx) => (
                       <div 
                         key={idx}
                         className={`w-full h-2 rounded-full ${
