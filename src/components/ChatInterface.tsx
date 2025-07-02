@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ const ChatInterface = ({ goal }) => {
   const [isTyping, setIsTyping] = useState(false);
   const [apiKeyValid, setApiKeyValid] = useState(true);
   const [showApiKeyReset, setShowApiKeyReset] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -79,18 +81,28 @@ const ChatInterface = ({ goal }) => {
       console.log('Gemini API 응답:', data);
       
       if (!response.ok) {
-        if (data.error?.message?.includes('expired') || data.error?.message?.includes('API key expired')) {
-          setApiKeyValid(false);
-          setShowApiKeyReset(true);
-          throw new Error('API 키가 만료되었습니다. 새로운 키로 교체가 필요합니다.');
-        } else if (data.error?.message?.includes('API key not valid') || data.error?.message?.includes('INVALID')) {
-          setApiKeyValid(false);
-          setShowApiKeyReset(true);
-          throw new Error('API 키가 유효하지 않습니다. 새로운 키로 교체가 필요합니다.');
+        // API 키 만료나 유효하지 않은 경우만 처리
+        if (data.error?.code === 400 && 
+            (data.error?.message?.includes('API key expired') || 
+             data.error?.message?.includes('API key not valid') ||
+             data.error?.details?.some(detail => detail.reason === 'API_KEY_INVALID'))) {
+          // 연속으로 3번 이상 API 키 오류가 발생한 경우에만 키 재설정 요구
+          if (retryCount >= 2) {
+            setApiKeyValid(false);
+            setShowApiKeyReset(true);
+            throw new Error('API 키에 문제가 있습니다. 새로운 키로 교체해주세요.');
+          } else {
+            setRetryCount(prev => prev + 1);
+            throw new Error('API 요청에 실패했습니다. 다시 시도해주세요.');
+          }
         } else {
-          throw new Error(`API 오류: ${data.error?.message || '알 수 없는 오류'}`);
+          // 다른 오류는 일시적인 문제로 처리
+          throw new Error(`API 오류: ${data.error?.message || '일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.'}`);
         }
       }
+      
+      // 성공적인 응답 시 재시도 카운트 리셋
+      setRetryCount(0);
       
       if (data.candidates && data.candidates[0] && data.candidates[0].content) {
         return data.candidates[0].content.parts[0].text;
@@ -129,12 +141,11 @@ const ChatInterface = ({ goal }) => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
-      setApiKeyValid(true);
     } catch (error) {
       const errorMessage = {
         id: Date.now() + 1,
         type: 'ai',
-        content: error.message.includes('API') ? error.message : "죄송해요, 응답하는 중에 문제가 생겼어요. 다시 시도해주세요.",
+        content: error.message,
         timestamp: new Date(),
         isError: true
       };
@@ -165,7 +176,7 @@ const ChatInterface = ({ goal }) => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      {(!apiKeyValid || showApiKeyReset) && (
+      {showApiKeyReset && (
         <Card className="border-red-200 bg-red-50 mb-4">
           <CardContent className="p-4">
             <div className="flex items-start gap-3 text-red-700">
