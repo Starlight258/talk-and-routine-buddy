@@ -1,11 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MessageCircle, TrendingUp, Heart, Star, Lightbulb } from 'lucide-react';
+import { Calendar, MessageCircle, TrendingUp, Heart, Star, Lightbulb, Target } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { getFailureStats } from '@/utils/failureAnalysis';
 
 const WeeklyReflection = ({ goal }) => {
   const [weeklyStats, setWeeklyStats] = useState({
@@ -19,6 +19,7 @@ const WeeklyReflection = ({ goal }) => {
   const [challenges, setChallenges] = useState('');
   const [hasReflectedThisWeek, setHasReflectedThisWeek] = useState(false);
   const [aiInsight, setAiInsight] = useState('');
+  const [suggestedAdjustments, setSuggestedAdjustments] = useState([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -29,7 +30,7 @@ const WeeklyReflection = ({ goal }) => {
   const calculateWeeklyStats = () => {
     const today = new Date();
     const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay()); // 이번 주 일요일
+    startOfWeek.setDate(today.getDate() - today.getDay());
 
     let completedDays = 0;
     let totalDays = 0;
@@ -38,9 +39,9 @@ const WeeklyReflection = ({ goal }) => {
       const date = new Date(startOfWeek);
       date.setDate(startOfWeek.getDate() + i);
       
-      if (date <= today) { // 오늘까지만
+      if (date <= today) {
         const dateStr = date.toDateString();
-        const status = localStorage.getItem(`routine_${dateStr}`);
+        const status = localStorage.getItem(`routine_${goal?.id}_${dateStr}`);
         
         if (status) {
           totalDays++;
@@ -70,6 +71,7 @@ const WeeklyReflection = ({ goal }) => {
       setMood(data.mood || '');
       setChallenges(data.challenges || '');
       setAiInsight(data.aiInsight || '');
+      setSuggestedAdjustments(data.suggestedAdjustments || []);
       setHasReflectedThisWeek(true);
     }
   };
@@ -82,33 +84,80 @@ const WeeklyReflection = ({ goal }) => {
     return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
   };
 
-  const generateAIInsight = (stats, userReflection, userMood, userChallenges) => {
+  const generateRoutineAdjustments = (stats, failureStats, userInput) => {
+    const adjustments = [];
+    
+    if (stats.successRate < 50) {
+      adjustments.push({
+        type: 'duration',
+        current: goal.duration,
+        suggested: Math.max(10, Math.floor(goal.duration * 0.7)),
+        reason: '성공률이 낮아 시간을 단축하는 것을 제안합니다'
+      });
+    }
+    
+    if (failureStats.byCategory.time >= 2) {
+      adjustments.push({
+        type: 'time',
+        current: goal.time,
+        suggested: '더 여유로운 시간대',
+        reason: '시간 부족이 주된 방해 요소로 보입니다'
+      });
+    }
+    
+    if (failureStats.byCategory.motivation >= 2) {
+      adjustments.push({
+        type: 'difficulty',
+        current: goal.difficulty,
+        suggested: 'easy',
+        reason: '동기 부족 문제로 난이도를 낮추는 것을 제안합니다'
+      });
+    }
+    
+    if (stats.successRate >= 80 && stats.totalDays >= 5) {
+      adjustments.push({
+        type: 'expansion',
+        current: goal.duration,
+        suggested: goal.duration + 10,
+        reason: '훌륭한 성과입니다! 시간을 늘려볼까요?'
+      });
+    }
+    
+    return adjustments;
+  };
+
+  const generateAdvancedAIInsight = (stats, userReflection, userMood, userChallenges, failureStats) => {
     let insight = "";
     
+    // 성공률 기반 기본 피드백
     if (stats.successRate >= 80) {
-      insight = "🎉 이번 주 정말 훌륭했어요! " + stats.successRate + "%의 성공률을 달성하셨네요. ";
-      insight += "이 기세를 유지하면서도 너무 무리하지 마세요. ";
+      insight = `🎉 이번 주 정말 훌륭했어요! ${stats.successRate}%의 성공률을 달성하셨네요. `;
     } else if (stats.successRate >= 60) {
-      insight = "✨ 이번 주도 잘 하셨어요! " + stats.successRate + "%는 충분히 의미있는 성과예요. ";
-      insight += "완벽하지 않아도 괜찮아요. 꾸준함이 더 중요해요. ";
+      insight = `✨ 이번 주도 잘 하셨어요! ${stats.successRate}%는 충분히 의미있는 성과예요. `;
     } else if (stats.successRate >= 40) {
-      insight = "💪 힘든 한 주였지만 포기하지 않으셨네요. ";
-      insight += "다음 주는 목표를 조금 낮춰서 부담을 줄여보는 건 어떨까요? ";
+      insight = `💪 힘든 한 주였지만 포기하지 않으셨네요. `;
     } else {
-      insight = "🌱 힘든 시기를 보내고 계시는군요. 괜찮아요, 새로운 시작이 될 수 있어요. ";
-      insight += "목표를 더 작게 나누어 작은 성공부터 쌓아가봐요. ";
+      insight = `🌱 힘든 시기를 보내고 계시는군요. 괜찮아요, 새로운 시작이 될 수 있어요. `;
     }
-
-    if (userMood === 'stressed' || userChallenges.includes('스트레스') || userChallenges.includes('힘들')) {
-      insight += "\n\n스트레스가 많으셨던 것 같아요. 루틴을 스트레스 해소의 도구로 활용해보세요. ";
-      insight += "완벽하게 하려고 하지 말고, 그날그날 컨디션에 맞춰 유연하게 조정하는 것도 좋습니다.";
+    
+    // 실패 패턴 분석 기반 조언
+    if (failureStats.byCategory.time >= 2) {
+      insight += "\n\n⏰ 시간 부족이 주된 방해 요소로 보입니다. 루틴 시간을 줄이거나 더 여유로운 시간대로 옮겨보는 건 어떨까요?";
     }
-
-    if (userMood === 'motivated' || userReflection.includes('좋았') || userReflection.includes('성취')) {
-      insight += "\n\n긍정적인 에너지가 느껴져요! 이런 동기가 지속될 수 있도록 작은 보상을 주는 것도 좋겠어요. ";
-      insight += "자신을 칭찬하는 시간을 가져보세요.";
+    
+    if (failureStats.byCategory.motivation >= 2) {
+      insight += "\n\n💭 동기 부족이 반복되고 있어요. 목표를 작게 나누거나 보상 시스템을 도입해보세요.";
     }
-
+    
+    if (failureStats.byCategory.health >= 2) {
+      insight += "\n\n🏥 컨디션 난조가 자주 발생하네요. 충분한 휴식과 함께 루틴 강도를 조절해보세요.";
+    }
+    
+    // 기분 기반 맞춤 조언
+    if (userMood === 'stressed' || userChallenges.includes('스트레스')) {
+      insight += "\n\n스트레스 관리가 루틴 성공의 열쇠가 될 것 같아요. 루틴 자체가 스트레스 해소 도구가 되도록 접근해보세요.";
+    }
+    
     return insight;
   };
 
@@ -116,24 +165,34 @@ const WeeklyReflection = ({ goal }) => {
     const today = new Date();
     const weekKey = `reflection_${today.getFullYear()}_${getWeekNumber(today)}`;
     
-    const aiInsightGenerated = generateAIInsight(weeklyStats, reflection, mood, challenges);
+    // 실패 통계 수집
+    const failureStats = getFailureStats(goal.id, 7);
+    
+    // AI 인사이트 생성
+    const aiInsightGenerated = generateAdvancedAIInsight(weeklyStats, reflection, mood, challenges, failureStats);
+    
+    // 루틴 조정 제안 생성
+    const adjustments = generateRoutineAdjustments(weeklyStats, failureStats, { reflection, mood, challenges });
     
     const reflectionData = {
       reflection,
       mood,
       challenges,
       aiInsight: aiInsightGenerated,
+      suggestedAdjustments: adjustments,
       weeklyStats,
+      failureStats,
       date: today.toISOString()
     };
 
     localStorage.setItem(weekKey, JSON.stringify(reflectionData));
     setAiInsight(aiInsightGenerated);
+    setSuggestedAdjustments(adjustments);
     setHasReflectedThisWeek(true);
 
     toast({
       title: "회고 완료! 🎉",
-      description: "AI 인사이트가 생성되었어요. 다음 주도 함께 해봐요!",
+      description: `AI 인사이트와 ${adjustments.length}개의 루틴 조정 제안이 생성되었어요!`,
     });
   };
 
@@ -184,19 +243,50 @@ const WeeklyReflection = ({ goal }) => {
         </CardContent>
       </Card>
 
-      {/* AI 인사이트 (이미 회고를 작성한 경우) */}
+      {/* AI 인사이트와 루틴 조정 제안 */}
       {hasReflectedThisWeek && aiInsight && (
-        <Card className="border-l-4 border-l-indigo-500 bg-indigo-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-indigo-700">
-              <Lightbulb className="w-5 h-5" />
-              AI 코치의 인사이트
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-indigo-800 whitespace-pre-wrap">{aiInsight}</p>
-          </CardContent>
-        </Card>
+        <>
+          <Card className="border-l-4 border-l-indigo-500 bg-indigo-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-indigo-700">
+                <Lightbulb className="w-5 h-5" />
+                AI 코치의 인사이트
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-indigo-800 whitespace-pre-wrap">{aiInsight}</p>
+            </CardContent>
+          </Card>
+
+          {suggestedAdjustments.length > 0 && (
+            <Card className="border-l-4 border-l-orange-500 bg-orange-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-orange-700">
+                  <Target className="w-5 h-5" />
+                  루틴 조정 제안
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {suggestedAdjustments.map((adjustment, index) => (
+                    <div key={index} className="p-3 bg-white border border-orange-200 rounded-lg">
+                      <p className="font-medium text-orange-800 mb-1">
+                        {adjustment.type === 'duration' && '⏱️ 소요 시간 조정'}
+                        {adjustment.type === 'time' && '🕐 시간대 조정'}
+                        {adjustment.type === 'difficulty' && '📊 난이도 조정'}
+                        {adjustment.type === 'expansion' && '📈 루틴 확장'}
+                      </p>
+                      <p className="text-sm text-orange-700 mb-2">{adjustment.reason}</p>
+                      <div className="text-xs text-orange-600">
+                        현재: {adjustment.current} → 제안: {adjustment.suggested}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
 
       {/* 회고 작성 폼 */}
@@ -262,7 +352,7 @@ const WeeklyReflection = ({ goal }) => {
               size="lg"
             >
               <Star className="w-4 h-4 mr-2" />
-              회고 완료하고 AI 인사이트 받기
+              회고 완료하고 맞춤 조정 제안 받기
             </Button>
           )}
 
@@ -275,7 +365,7 @@ const WeeklyReflection = ({ goal }) => {
         </CardContent>
       </Card>
 
-      {/* 지난 회고 (선택사항) */}
+      {/* 성장 히스토리 */}
       <Card className="border-0 shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

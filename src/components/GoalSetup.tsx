@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Target, Clock, Calendar, Sparkles } from 'lucide-react';
+import SuccessCriteriaSetup from './SuccessCriteriaSetup';
 
 const GoalSetup = ({ onGoalSet, existingGoal = null, isEditing = false }) => {
   const [goal, setGoal] = useState({
@@ -15,10 +16,16 @@ const GoalSetup = ({ onGoalSet, existingGoal = null, isEditing = false }) => {
     frequency: existingGoal?.frequency || 'daily',
     duration: existingGoal?.duration || 30,
     time: existingGoal?.time || '08:00',
-    difficulty: existingGoal?.difficulty || 'medium'
+    difficulty: existingGoal?.difficulty || 'medium',
+    successCriteria: existingGoal?.successCriteria || []
   });
 
   const [step, setStep] = useState(1);
+
+  const handleSuccessCriteria = (criteria) => {
+    setGoal(prev => ({ ...prev, successCriteria: criteria }));
+    setStep(3);
+  };
 
   const handleSubmit = () => {
     const routineData = {
@@ -185,6 +192,31 @@ const GoalSetup = ({ onGoalSet, existingGoal = null, isEditing = false }) => {
                 <Button 
                   variant="outline" 
                   onClick={() => setStep(1)}
+                  className="flex-1"
+                >
+                  이전
+                </Button>
+                <Button 
+                  onClick={() => setStep(3)}
+                  className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                  size="lg"
+                >
+                  성공 기준 설정하기
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-6">
+              <SuccessCriteriaSetup 
+                onCriteriaSet={handleSuccessCriteria}
+                initialCriteria={goal.successCriteria}
+              />
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setStep(2)}
                   className="flex-1"
                 >
                   이전
