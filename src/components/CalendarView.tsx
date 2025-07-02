@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -114,13 +113,7 @@ const CalendarView = ({ routines }: { routines: any[] }) => {
     <div className="space-y-6">
       {/* 루틴 범례 */}
       <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5 text-indigo-600" />
-            루틴 색상 가이드
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="flex flex-wrap gap-2">
             {routines.map((routine) => (
               <Badge 
