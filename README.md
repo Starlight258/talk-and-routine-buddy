@@ -1,73 +1,145 @@
-# Welcome to your Lovable project
 
-## Project info
+# 루틴과 말하기 - AI 루틴 코치
 
-**URL**: https://lovable.dev/projects/164bd13f-e2a9-4938-a9a2-66c3475d844c
+AI와 함께 유연하게 목표를 조정하며, 지속 가능한 루틴을 만들어가는 웹 애플리케이션
 
-## How can I edit this code?
+## 🌐 배포 URL
+**Live Demo**: https://lovable.dev/projects/164bd13f-e2a9-4938-a9a2-66c3475d844c
 
-There are several ways of editing your application.
+## 👥 페르소나
 
-**Use Lovable**
+### 주요 타겟 사용자: "성장하는 민지" (20대 후반 직장인)
+- **배경**: 바쁜 직장 생활 속에서도 자기계발을 원하는 직장인
+- **고민**: 
+  - 운동, 독서, 학습 등 여러 루틴을 시작하지만 지속하기 어려움
+  - 완벽주의 성향으로 한 번 실패하면 포기하는 경향
+  - 혼자서는 동기부여가 어려움
+- **니즈**: 
+  - 유연한 목표 조정으로 지속 가능한 루틴 관리
+  - AI 코치의 격려와 맞춤형 피드백
+  - 시각적으로 진행상황을 확인할 수 있는 도구
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/164bd13f-e2a9-4938-a9a2-66c3475d844c) and start prompting.
+### 보조 타겟: "체계적인 준호" (30대 초반 프리랜서)
+- **배경**: 자유로운 일정으로 인해 규칙적인 생활이 어려운 프리랜서
+- **니즈**: 
+  - 다양한 프로젝트와 개인 루틴의 균형
+  - 데이터 기반의 루틴 성과 분석
+  - 색깔별 카테고리로 루틴 구분 관리
 
-Changes made via Lovable will be committed automatically to this repo.
+## 📖 사용자 스토리
 
-**Use your preferred IDE**
+### 🎯 핵심 스토리
+1. **루틴 설정**: "나는 운동, 독서, 영어공부 등 여러 루틴을 각각 다른 색깔로 구분해서 관리하고 싶다"
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+2. **진행 현황 확인**: "나는 달력에서 한눈에 어떤 루틴을 성공했는지, 실패했는지 색깔로 구분해서 보고 싶다"
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+3. **AI 피드백**: "나는 루틴 완료 후 간단한 소감을 작성하면, AI가 그걸 바탕으로 격려해주고 목표를 유연하게 조정해주길 원한다"
 
-Follow these steps:
+4. **대화형 코칭**: "나는 AI 코치와 대화하면서 루틴에 대한 고민을 상담받고 싶다"
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+### 🔄 상세 사용자 여정
+
+#### 첫 사용자 (신규 가입)
+1. **설정 단계**: Google Gemini API 키 입력으로 AI 서비스 활성화
+2. **루틴 생성**: "운동 - 빨간색", "독서 - 파란색", "영어공부 - 초록색" 등 루틴별 색깔 지정
+3. **목표 설정**: 각 루틴의 주간 목표 횟수 설정
+
+#### 일상 사용자 (기존 사용자)
+1. **일일 체크**: 달력에서 오늘 날짜 클릭하여 루틴 완료 표시
+2. **소감 작성**: "오늘 운동은 힘들었지만 30분 완주했어요" 등 간단한 후기 입력
+3. **AI 피드백 확인**: "30분 완주하신 것 대단해요! 내일은 25분으로 조정해볼까요?" 같은 맞춤형 조언 받기
+
+#### 분석 및 개선
+1. **주간 리뷰**: 대시보드에서 루틴별 성공률과 트렌드 확인
+2. **AI 상담**: 챗봇과 대화하며 루틴 개선 방안 논의
+3. **목표 재조정**: AI 추천을 바탕으로 현실적인 목표로 수정
+
+## ✨ 주요 기능
+- 🎨 **다중 루틴 관리**: 색깔별로 구분된 여러 루틴 동시 관리
+- 📅 **시각적 달력**: 색깔로 구분된 성공/실패 현황을 달력에서 한눈에 확인
+- 🤖 **AI 코치**: Google Gemini 기반 맞춤형 피드백 및 대화형 상담
+- 📝 **소감 기반 조정**: 사용자 후기를 분석해 유연한 목표 재설정
+- 📊 **진행 현황 대시보드**: 루틴별 통계 및 성과 분석
+
+## 🛠 기술 스택
+- **Frontend**: React 18, TypeScript, Vite
+- **UI/UX**: Tailwind CSS, shadcn/ui
+- **AI**: Google Gemini API
+- **상태 관리**: React Query
+- **아이콘**: Lucide React
+- **차트**: Recharts
+
+## 🚀 로컬 개발 환경 세팅
+
+### 사전 요구사항
+- Node.js 18+ 및 npm 설치 ([nvm으로 설치 권장](https://github.com/nvm-sh/nvm#installing-and-updating))
+- Google Gemini API 키 ([Google AI Studio](https://aistudio.google.com/app/apikey)에서 발급)
+
+### 설치 및 실행
+```bash
+# 레포지토리 클론
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# 의존성 설치
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 개발 서버 실행
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### API 키 설정
+1. [Google AI Studio](https://aistudio.google.com/app/apikey)에서 API 키 생성
+2. 앱 실행 후 초기 설정 화면에서 API 키 입력
+3. 브라우저 로컬 스토리지에 안전하게 저장됨
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📁 프로젝트 구조
+```
+src/
+├── components/          # UI 컴포넌트
+│   ├── ui/             # shadcn/ui 기본 컴포넌트
+│   ├── ApiKeySetup.tsx # API 키 설정
+│   ├── CalendarView.tsx # 달력 뷰
+│   ├── ChatInterface.tsx # AI 채팅
+│   ├── Dashboard.tsx    # 통계 대시보드
+│   ├── MultiRoutineManager.tsx # 루틴 관리자
+│   ├── ReflectionModal.tsx # 소감 작성 모달
+│   └── RoutineCard.tsx  # 루틴 카드
+├── pages/              # 페이지 컴포넌트
+│   └── Index.tsx       # 메인 페이지
+└── lib/               # 유틸리티 함수
+    └── utils.ts       # 공통 유틸
+```
 
-**Use GitHub Codespaces**
+## 🎯 사용법
+1. **API 키 설정**: 첫 실행 시 Google Gemini API 키 입력
+2. **루틴 추가**: "루틴들" 탭에서 새 루틴 생성 및 색깔 지정
+3. **일일 체크**: "달력" 탭에서 날짜 클릭하여 루틴 완료 표시
+4. **소감 작성**: 루틴 완료 후 간단한 후기 작성으로 AI 피드백 받기
+5. **AI 상담**: "AI 코치" 탭에서 루틴 관련 고민 상담
+6. **진행 현황**: "현황" 탭에서 통계 및 성과 분석 확인
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🔒 개인정보 보호
+- API 키는 브라우저 로컬 스토리지에만 저장
+- 개인 데이터는 외부 서버로 전송되지 않음
+- 모든 루틴 데이터는 로컬에서 관리
 
-## What technologies are used for this project?
+## 📈 로드맵
+- [ ] 루틴 공유 기능
+- [ ] 친구와 함께하는 챌린지
+- [ ] 더 다양한 AI 코칭 스타일
+- [ ] 모바일 앱 버전
+- [ ] 루틴 템플릿 라이브러리
 
-This project is built with:
+## 🤝 기여하기
+이 프로젝트는 Lovable을 통해 개발되었습니다. 기여를 원하시면:
+1. 이슈 등록을 통한 버그 리포트나 기능 제안
+2. Pull Request를 통한 코드 기여
+3. 사용 후기 및 개선사항 공유
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 📄 라이센스
+MIT License - 자유롭게 사용, 수정, 배포 가능합니다.
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/164bd13f-e2a9-4938-a9a2-66c3475d844c) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+💡 **Tips**: API 키 관련 문제가 생기면 "API 키 초기화" 버튼을 눌러 새로운 키로 재설정해보세요!
