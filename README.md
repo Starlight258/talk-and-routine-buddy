@@ -4,7 +4,7 @@
 AI와 함께 유연하게 목표를 조정하며, 지속 가능한 루틴을 만들어가는 웹 애플리케이션
 
 ## 🌐 배포 URL
-**Live Demo**: https://lovable.dev/projects/164bd13f-e2a9-4938-a9a2-66c3475d844c
+**Live Demo**: https://talk-and-routine-buddy.lovable.app
 
 ## 👥 페르소나
 
