@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,57 +31,59 @@ const ChatInterface = ({ goal }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const getAIResponse = (userMessage) => {
-    const message = userMessage.toLowerCase();
+  const getGeminiResponse = async (userMessage) => {
+    const apiKey = localStorage.getItem('gemini_api_key');
     
-    // 감정/상태 관련 응답
-    if (message.includes('힘들') || message.includes('어려워') || message.includes('포기') || message.includes('못하겠')) {
-      return [
-        "힘드시죠? 완전히 이해해요. 목표를 달성하는 건 쉽지 않은 일이에요. 하지만 당신이 여기까지 온 것만으로도 대단해요! 💪",
-        "잠깐, 숨을 고르고 생각해볼까요? 목표를 조금 더 작게 나누거나 시간을 줄여보는 건 어떨까요? 완벽하지 않아도 괜찮아요.",
-        "오늘 하루만 해보시겠어요? 전체 목표 말고 딱 오늘 하루만요. 그것만으로도 충분히 의미있는 일이에요. ✨"
-      ];
+    const prompt = `
+당신은 친근하고 격려적인 루틴 코치 AI입니다. 사용자의 목표는 "${goal?.title}"입니다.
+
+사용자 메시지: "${userMessage}"
+
+다음 지침에 따라 응답해주세요:
+1. 친근하고 따뜻한 톤으로 대화
+2. 실패나 어려움에 대해서는 위로와 격려 제공
+3. 성공에 대해서는 칭찬과 동기부여
+4. 목표 조정이 필요하면 구체적인 제안
+5. 150자 이내로 간결하게 응답
+6. 이모지를 적절히 사용
+
+응답:`;
+
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 200,
+          }
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+        return data.candidates[0].content.parts[0].text;
+      } else {
+        throw new Error('응답을 받을 수 없습니다.');
+      }
+    } catch (error) {
+      console.error('Gemini API 오류:', error);
+      return "죄송해요, 지금은 응답할 수 없어요. 잠시 후 다시 시도해주세요. 🙏";
     }
-    
-    // 성공/완료 관련 응답
-    if (message.includes('했어') || message.includes('완료') || message.includes('성공') || message.includes('좋')) {
-      return [
-        "와! 정말 멋져요! 🎉 이렇게 하나씩 쌓아가는 성공이 큰 변화를 만들어낼 거예요. 스스로를 자랑스러워하세요!",
-        "대단해요! 오늘의 작은 승리가 내일의 큰 힘이 될 거예요. 이 기세로 계속 해봐요! 🔥",
-        "완료! 꾸준함이 가장 큰 힘이에요. 당신의 노력이 정말 자랑스러워요. 내일도 함께 해봐요!"
-      ];
-    }
-    
-    // 조정/변경 관련 응답
-    if (message.includes('바꾸고') || message.includes('조정') || message.includes('줄이') || message.includes('시간')) {
-      return [
-        "물론이죠! 목표를 조정하는 건 포기가 아니라 지혜로운 선택이에요. 무리하지 말고 지속 가능한 수준으로 맞춰봐요.",
-        "좋은 생각이에요! 너무 무리한 목표보다는 꾸준히 할 수 있는 목표가 훨씬 효과적이에요. 어떻게 조정하고 싶으세요?",
-        "스마트한 판단이에요! 목표 수정 탭으로 가서 시간이나 빈도를 조정해보세요. 작은 성공들이 모여 큰 변화를 만들어요. 💡"
-      ];
-    }
-    
-    // 동기부여 요청
-    if (message.includes('동기') || message.includes('의욕') || message.includes('왜')) {
-      return [
-        "당신이 이 목표를 세운 이유를 기억해보세요. 그 처음 마음이 지금도 당신 안에 있어요. ✨",
-        "작은 변화도 변화예요. 오늘 하루의 노력이 일주일 후, 한 달 후의 당신을 바꿀 거예요. 믿어보세요!",
-        "완벽하지 않아도 괜찮아요. 중요한 건 포기하지 않고 계속 시도하는 것이에요. 당신은 이미 잘하고 있어요! 🌟"
-      ];
-    }
-    
-    // 기본 격려 응답
-    const defaultResponses = [
-      "언제나 응원하고 있어요! 궁금한 게 있으면 편하게 말씀해주세요. 😊",
-      "하루하루 꾸준히 하는 당신이 정말 멋져요. 작은 걸음도 앞으로 나아가는 거예요! 👏",
-      "목표 달성은 마라톤과 같아요. 천천히, 꾸준히가 중요해요. 함께 해봐요! 💪",
-      "오늘도 좋은 하루 보내세요! 루틴에 대해 궁금한 게 있으면 언제든 물어보세요. 🌈"
-    ];
-    
-    return defaultResponses;
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
     const userMessage = {
@@ -94,21 +97,29 @@ const ChatInterface = ({ goal }) => {
     setInputMessage('');
     setIsTyping(true);
 
-    // AI 응답 시뮬레이션
-    setTimeout(() => {
-      const aiResponses = getAIResponse(inputMessage);
-      const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
+    // AI 응답 받기
+    try {
+      const aiResponse = await getGeminiResponse(inputMessage);
       
       const aiMessage = {
         id: Date.now() + 1,
         type: 'ai',
-        content: randomResponse,
+        content: aiResponse,
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      const errorMessage = {
+        id: Date.now() + 1,
+        type: 'ai',
+        content: "죄송해요, 응답하는 중에 문제가 생겼어요. 다시 시도해주세요.",
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1000 + Math.random() * 1500); // 1-2.5초 랜덤 딜레이
+    }
   };
 
   const handleKeyPress = (e) => {

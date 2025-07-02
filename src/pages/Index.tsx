@@ -9,13 +9,21 @@ import ChatInterface from '@/components/ChatInterface';
 import RoutineTracker from '@/components/RoutineTracker';
 import Dashboard from '@/components/Dashboard';
 import WeeklyReflection from '@/components/WeeklyReflection';
+import ApiKeySetup from '@/components/ApiKeySetup';
 
 const Index = () => {
+  const [hasApiKey, setHasApiKey] = useState(false);
   const [hasGoal, setHasGoal] = useState(false);
   const [currentGoal, setCurrentGoal] = useState(null);
   const [activeTab, setActiveTab] = useState('goal');
 
   useEffect(() => {
+    // API 키 확인
+    const savedApiKey = localStorage.getItem('gemini_api_key');
+    if (savedApiKey) {
+      setHasApiKey(true);
+    }
+
     // 저장된 목표가 있는지 확인
     const savedGoal = localStorage.getItem('userGoal');
     if (savedGoal) {
@@ -25,6 +33,10 @@ const Index = () => {
     }
   }, []);
 
+  const handleApiKeySet = (apiKey) => {
+    setHasApiKey(true);
+  };
+
   const handleGoalSet = (goal) => {
     setCurrentGoal(goal);
     setHasGoal(true);
@@ -32,6 +44,12 @@ const Index = () => {
     setActiveTab('routine');
   };
 
+  // API 키가 없으면 API 키 설정 화면 표시
+  if (!hasApiKey) {
+    return <ApiKeySetup onApiKeySet={handleApiKeySet} />;
+  }
+
+  // 목표가 없으면 목표 설정 화면 표시
   if (!hasGoal) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
