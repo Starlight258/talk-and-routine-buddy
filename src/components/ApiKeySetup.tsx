@@ -16,8 +16,8 @@ const ApiKeySetup = ({ onApiKeySet }) => {
       throw new Error('API 키가 너무 짧습니다.');
     }
 
-    // Google Gemini API로 간단한 테스트 요청
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${key}`, {
+    // Google Gemini API로 간단한 테스트 요청 - 새로운 엔드포인트 사용
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -32,7 +32,9 @@ const ApiKeySetup = ({ onApiKeySet }) => {
     });
 
     if (!response.ok) {
-      throw new Error('API 키가 유효하지 않습니다.');
+      const errorData = await response.json();
+      console.log('API 오류:', errorData);
+      throw new Error('API 키가 유효하지 않습니다. 키를 다시 확인해주세요.');
     }
 
     return true;
@@ -110,7 +112,7 @@ const ApiKeySetup = ({ onApiKeySet }) => {
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">
                 <strong>API 키 받기:</strong><br/>
-                1. <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a>에 접속<br/>
+                1. <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a>에 접속<br/>
                 2. "Create API Key" 클릭<br/>
                 3. 생성된 키를 복사해서 위에 입력
               </p>
