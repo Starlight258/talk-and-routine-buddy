@@ -10,6 +10,7 @@ const ChatInterface = ({ goal }) => {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [apiKeyValid, setApiKeyValid] = useState(true);
+  const [showApiKeyReset, setShowApiKeyReset] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -78,12 +79,14 @@ const ChatInterface = ({ goal }) => {
       console.log('Gemini API 응답:', data);
       
       if (!response.ok) {
-        if (data.error?.message?.includes('API key expired')) {
+        if (data.error?.message?.includes('expired') || data.error?.message?.includes('API key expired')) {
           setApiKeyValid(false);
-          throw new Error('API 키가 만료되었습니다. 새로운 키를 설정해주세요.');
-        } else if (data.error?.message?.includes('API key not valid')) {
+          setShowApiKeyReset(true);
+          throw new Error('API 키가 만료되었습니다. 새로운 키로 교체가 필요합니다.');
+        } else if (data.error?.message?.includes('API key not valid') || data.error?.message?.includes('INVALID')) {
           setApiKeyValid(false);
-          throw new Error('API 키가 유효하지 않습니다. 키를 다시 확인해주세요.');
+          setShowApiKeyReset(true);
+          throw new Error('API 키가 유효하지 않습니다. 새로운 키로 교체가 필요합니다.');
         } else {
           throw new Error(`API 오류: ${data.error?.message || '알 수 없는 오류'}`);
         }
@@ -148,7 +151,7 @@ const ChatInterface = ({ goal }) => {
     }
   };
 
-  const handleApiKeyRefresh = () => {
+  const handleApiKeyReset = () => {
     localStorage.removeItem('gemini_api_key');
     window.location.reload();
   };
@@ -162,22 +165,32 @@ const ChatInterface = ({ goal }) => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      {!apiKeyValid && (
+      {(!apiKeyValid || showApiKeyReset) && (
         <Card className="border-red-200 bg-red-50 mb-4">
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-red-700">
-              <AlertTriangle className="w-5 h-5" />
+            <div className="flex items-start gap-3 text-red-700">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="font-medium">API 키 문제가 발생했습니다</p>
-                <p className="text-sm">새로운 API 키를 설정해주세요.</p>
+                <p className="font-medium text-lg mb-2">🔑 API 키 문제 발생</p>
+                <p className="text-sm mb-3">
+                  Google Gemini API 키가 만료되었거나 유효하지 않습니다.<br/>
+                  새로운 API 키로 교체해주세요.
+                </p>
+                <div className="bg-red-100 p-3 rounded-lg mb-3">
+                  <p className="text-xs font-medium mb-1">📝 새 API 키 받는 방법:</p>
+                  <p className="text-xs">
+                    1. <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline font-medium">Google AI Studio</a> 접속<br/>
+                    2. 로그인 후 "Create API Key" 클릭<br/>
+                    3. 생성된 새 키를 복사해서 사용
+                  </p>
+                </div>
               </div>
               <Button 
-                variant="outline" 
+                onClick={handleApiKeyReset}
+                className="bg-red-600 hover:bg-red-700 text-white border-0"
                 size="sm"
-                onClick={handleApiKeyRefresh}
-                className="border-red-300 text-red-700 hover:bg-red-100"
               >
-                키 재설정
+                새 키 설정하기
               </Button>
             </div>
           </CardContent>
