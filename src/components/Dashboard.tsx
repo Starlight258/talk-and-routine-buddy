@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { BarChart3, TrendingUp, Calendar, Target, Fire, Award, Clock, CheckCircle } from 'lucide-react';
+import { BarChart3, TrendingUp, Calendar, Target, Flame, Award, Clock, CheckCircle } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const Dashboard = ({ goal }) => {
@@ -160,7 +159,7 @@ const Dashboard = ({ goal }) => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="border-0 shadow-lg">
           <CardContent className="p-4 text-center">
-            <Fire className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+            <Flame className="w-8 h-8 text-orange-500 mx-auto mb-2" />
             <p className="text-2xl font-bold text-orange-600">{stats.currentStreak}</p>
             <p className="text-sm text-gray-600">현재 연속</p>
           </CardContent>
