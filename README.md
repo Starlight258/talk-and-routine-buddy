@@ -7,7 +7,7 @@
 
 ## 🔗 배포 URL
 
-👉 [루틴과 말하기 웹 앱 바로가기](https://routine-ai-coach.lovable.app/)
+👉 [루틴과 말하기 웹 앱 바로가기](https://tiny-cobbler-5c7ad7.netlify.app/)
 
 ---
 
