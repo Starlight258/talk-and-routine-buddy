@@ -8,7 +8,7 @@
 
 ## 🌐 배포 주소
 
-👉 https://wave-of-routines-ai.vercel.app/analytics
+👉 https://wave-of-routines-ai.vercel.app/
 
 ---
 
